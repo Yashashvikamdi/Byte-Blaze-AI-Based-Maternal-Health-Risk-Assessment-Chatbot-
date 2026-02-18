@@ -21,7 +21,7 @@ Maternal Health Risk Detection Hackathon Project
 
 ## How to Access
 
-- **Live Website (Doctor Appointment):** [Click here](https://Yashashvikamdi.github.io/Byte-Blaze-AI-Based-Maternal-Health-Risk-Assessment-Chatbot-/index.html)  
+- **Live Website (Doctor Appointment):** [Click here]https://sakhichatbot.edgeone.app/ 
 - **Live Website (Sakhi Main Chatbot):** [Click here](https://Yashashvikamdi.github.io/Byte-Blaze-AI-Based-Maternal-Health-Risk-Assessment-Chatbot-/SakhiMain.html)  
 
 > Note: Ensure you are using a modern browser for the best experience.
