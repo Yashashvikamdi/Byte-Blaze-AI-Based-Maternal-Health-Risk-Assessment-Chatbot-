@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sakhi Smart Maternity Bot</title>
+<style>
+/* -------- BODY & GENERAL -------- */
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(160deg, #fef3f8, #eef8fc);
+  margin: 0;
+  padding: 20px;
+}
+h2 {
+  text-align: center;
+  color: #8e44ad;
+  text-shadow: 1px 1px 2px #fff;
+}
+
+/* -------- CHAT AREA -------- */
+#chat {
+  height: 450px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 2px solid #8e44ad;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------- CHAT BUBBLES -------- */
+.msg {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 20px;
+  max-width: 75%;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.bot {
+  background: #f0f4ff;
+  color: #2c3e50;
+  align-self: flex-start;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+}
+.user {
+  background: #ffe4f0;
+  color: #8e44ad;
+  align-self: flex-end;
+  text-align: right;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+}
+
+/* -------- RISK TAGS -------- */
+.tag {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 6px;
+  font-weight: bold;
+  font-family: 'Segoe UI';
+}
+.low { background: #d4edda; color: #155724; }
+.mod { background: #fff3cd; color: #856404; }
+.high { background: #f8d7da; color: #721c24; }
+
+/* -------- BUTTONS & INPUTS -------- */
+input, button {
+  padding: 10px 14px;
+  margin: 4px 2px;
+  border-radius: 10px;
+  border: 1px solid #8e44ad;
+  font-size: 14px;
+}
+button {
+  cursor: pointer;
+  background: #8e44ad;
+  color: white;
+  font-weight: bold;
+  transition: 0.3s;
+}
+button:hover { background: #6c3483; }
+
+input[type="file"] {
+  border: 1px dashed #8e44ad;
+  background: #fff0f8;
+}
+
+/* -------- SYMPTOMS PANEL -------- */
+.symptoms {
+  background:#fff;
+  border:2px solid #8e44ad;
+  padding:14px;
+  border-radius:16px;
+  margin-bottom:12px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.symptoms b { color: #8e44ad; font-size: 16px; }
+
+</style>
+</head>
+<body>
+
+<h2>🤰 Sakhi — AI Maternity Safety Assistant</h2>
+
+<div class="symptoms">
+<b>🤰 Pregnancy Month-wise Possible Symptoms</b><br><br>
+1️⃣ Month 1: Nausea, vomiting, fatigue, mood swings<br>
+2️⃣ Month 2: Morning sickness, headache, dizziness<br>
+3️⃣ Month 3: Back pain, vomiting, frequent urination<br>
+4️⃣ Month 4: Gas, heartburn, mild abdominal pain<br>
+5️⃣ Month 5: Leg cramps, baby movement, skin changes<br>
+6️⃣ Month 6: Swelling, acidity, varicose veins<br>
+7️⃣ Month 7: Pelvic pain, back pain, tiredness<br>
+8️⃣ Month 8: Severe back pain, contractions practice<br>
+9️⃣ Month 9: Labor pain, water leakage, contractions<br>
+</div>
+
+<div id="chat"></div>
+
+<input id="msg" placeholder="Apna message likhiye">
+<button onclick="send()">Send</button>
+<button onclick="voice()">🎤 Voice</button>
+<button onclick="restartChat()">🔄 Clear Chat</button>
+<br>
+<input type="file" id="report">
+<button onclick="save()">💾 Save Chat</button>
+
+<script>
+const chat=document.getElementById("chat")
+let history=[]
+function speak(t){
+ const u=new SpeechSynthesisUtterance(t)
+ u.lang="hi-IN"
+ speechSynthesis.speak(u)
+}
+function add(role,text,risk=null){
+ const d=document.createElement("div")
+ d.className="msg "+role
+ d.innerText=(role=="bot"?"Sakhi: ":"You: ")+text
+ if(risk){
+   const s=document.createElement("span")
+   s.className="tag "+risk
+   s.innerText=" "+risk.toUpperCase()
+   d.appendChild(s)
+ }
+ chat.appendChild(d)
+ chat.scrollTop=chat.scrollHeight
+ if(role=="bot") speak(text)
+ history.push((role=="bot"?"BOT: ":"USER: ")+text)
+}
+
+/* VOICE INPUT */
+function voice(){
+ const r=new webkitSpeechRecognition()
+ r.lang="hi-IN"
+ r.onresult=e=>{
+  msg.value=e.results[0][0].transcript.toLowerCase()
+  send()
+ }
+ r.start()
+}
+
+/* STATE */
+let state={stage:"start",profile:{}}
+const monthData={1:"nausea, vomiting, fatigue",2:"morning sickness, headache",3:"back pain, mood change",
+4:"gas, heartburn",5:"leg cramps, baby movement",6:"swelling, acidity",7:"pelvic pain",8:"heavy back pain",9:"contractions, water leak"}
+
+const symptomDB=[
+{keys:["vomit","nausea","उल्टी"],risk:"low",care:"small meals",nut:"ginger"},
+{keys:["thakan","fatigue"],risk:"low",care:"rest",nut:"iron food"},
+{keys:["headache"],risk:"mod",care:"relax",nut:"water"},
+{keys:["chakkar"],risk:"mod",care:"lie down",nut:"dates"},
+{keys:["back pain","पीठ"],risk:"mod",care:"posture",nut:"milk"},
+{keys:["swelling","सूजन"],risk:"high",care:"doctor visit",nut:"protein"},
+{keys:["bleeding"],risk:"high",care:"hospital now",nut:"—"},
+{keys:["no movement"],risk:"high",care:"emergency",nut:"—"},
+{keys:["contraction","labor"],risk:"high",care:"hospital",nut:"fluids"}]
+
+const emergencyWords=["bleeding","water leak","baby not move","fits","behosh","tez dard"]
+function isEmergency(t){return emergencyWords.some(w=>t.includes(w))}
+
+/* REPORT ANALYZER */
+function analyzeReport(file){
+ const name=file.name.toLowerCase()
+ const size=file.size/1024
+ let risk="low", notes=[], precautions=[]
+ if(name.includes("bp")||name.includes("pressure")){ risk="mod"; notes.push("BP related report")}
+ if(name.includes("sugar")||name.includes("glucose")){ risk="mod"; notes.push("Sugar mention")}
+ if(name.includes("high")||size>800){ risk="high"; notes.push("Complex report")}
+ if(name.includes("normal")){ risk="low"; notes.push("Normal indicators")}
+ if(risk=="high") precautions.push("Hospital consult")
+ if(risk=="mod") precautions.push("Regular monitoring")
+ if(risk=="low") precautions.push("Routine care")
+ return { risk, summary: notes.join(", ") || "General pregnancy report", precautions }
+}
+function hospitalLink(){return "https://www.google.com/maps/search/nearby+hospital"}
+
+/* FLOW */
+add("bot","Namaste 🌸 Kya aap pregnant hain? (haan / nahi)")
+
+function send(){
+ const m=msg.value.toLowerCase().trim()
+ if(!m) return
+ add("user",m)
+ msg.value=""
+
+/* start */
+if(state.stage=="start"){ if(m.includes("ha")){ state.stage="age"; return add("bot","Umar bataiye?")} else { state.stage="general"; return add("bot","Symptoms batao, main guide karungi.")}}
+
+/* non pregnant */
+if(state.stage=="general"){ if(isEmergency(m)) return add("bot","🚨 Emergency — hospital jao — 108","high")
+ return add("bot","Pregnancy test karna better.","mod")}
+
+/* age */
+if(state.stage=="age"){ if(!isNaN(m)){ state.profile.age=m; state.stage="disease"; return add("bot","Koi purani bimaari? (bp/sugar/thyroid/none)")} return add("bot","Number likhiye")}
+
+/* disease */
+if(state.stage=="disease"){ state.profile.disease=m; state.stage="month"; return add("bot","Pregnancy month (1-9)?")}
+
+/* month */
+if(state.stage=="month"){
+ if(m>=1 && m<=9){ state.profile.month=m; state.stage="askReport"; add("bot","Is month me symptoms: "+monthData[m]); return add("bot","Kya aap report upload karna chahte ho? (yes/no)")}
+ return add("bot","1-9 likho")
+}
+
+/* report */
+if(state.stage=="askReport"){
+ if(m=="no"){ state.stage="chat"; return add("bot","Theek hai — symptom batao")}
+ const f=document.getElementById("report").files[0]
+ if(f){
+   const result=analyzeReport(f)
+   add("bot","📄 Report Summary: "+result.summary)
+   add("bot","Risk Level: "+result.risk,result.risk)
+   add("bot","Precautions: "+result.precautions.join(", "))
+   if(result.risk=="high"){ add("bot","🚨 Nearby hospital:"); add("bot",hospitalLink(),"high") }
+   state.stage="chat"
+   return
+ }
+ return add("bot","File select karo ya no likho")
+}
+
+/* main chat */
+if(state.stage=="chat"){
+ if(isEmergency(m)) return add("bot","🚨 Emergency — 108 call karein","high")
+ for(const s of symptomDB){ if(s.keys.some(k=>m.includes(k))){ return add("bot","Risk:"+s.risk+" | Care:"+s.care+" | Diet:"+s.nut+" | Helpline:108",s.risk)}}
+ if(m.includes("month")) return add("bot",monthData[state.profile.month])
+ return add("bot","Thank you 🙏 Doctor se appointment ke liye yaha click kare:\nhttps://environmental-amber-3aljchudvi.edgeone.app/")
+}
+}
+
+/* SAVE */
+function save(){
+ const blob=new Blob([history.join("\n")])
+ const a=document.createElement("a")
+ a.href=URL.createObjectURL(blob)
+ a.download="sakhi_chat.txt"
+ a.click()
+}
+
+/* RESET */
+function restartChat(){
+ chat.innerHTML=""
+ history=[]
+ document.getElementById("report").value=""
+ state={stage:"start",profile:{}}
+ add("bot","Chat reset 🌸 Kya aap pregnant hain?")
+}
+</script>
+</body>
+</html>
